@@ -23,11 +23,14 @@ export default {
   name: "App",
   data() {
     return {
-      deferredPrompt: null
+      deferredPrompt: null,
     };
   },
   created() {
-    window.addEventListener("beforeinstallprompt", e => {
+    if (this.isIos) {
+      this.deferredPrompt = true;
+    }
+    window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       // Stash the event so it can be triggered later.
       if (Cookies.get("add-to-home-screen") === undefined) {
@@ -38,6 +41,15 @@ export default {
       this.deferredPrompt = null;
     });
   },
+  computed: {
+    isIos() {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    },
+    isInStandaloneMode() {
+      return "standalone" in window.navigator && window.navigator.standalone;
+    }
+  },
   methods: {
     async dismiss() {
       Cookies.set("add-to-home-screen", null, { expires: 15 });
@@ -45,7 +57,7 @@ export default {
     },
     async install() {
       this.deferredPrompt.prompt();
-    }
-  }
+    },
+  },
 };
 </script>
